@@ -24,7 +24,7 @@ class TrainingConfig:
     if BaseConfig.DATASET == "MNIST":
         IMG_SHAPE = (1, 32, 32)
     elif BaseConfig.DATASET == "SketchDataset":
-        IMG_SHAPE = (3, 256, 256)
+        IMG_SHAPE = (1, 256, 256)
     else:
         IMG_SHAPE = (3, 32, 32)
     NUM_EPOCHS = 1000
@@ -49,6 +49,7 @@ model = UNet(
     dropout_rate=ModelConfig.DROPOUT_RATE,
     time_multiple=ModelConfig.TIME_EMB_MULT,
 )
+#model = nn.DataParallel(model, device_ids=[0, 1], output_device=0)
 model.to(BaseConfig.DEVICE)
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=TrainingConfig.LR)

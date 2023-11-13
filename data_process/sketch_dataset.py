@@ -14,7 +14,7 @@ class SketchDataset(Dataset):
     
     def __getitem__(self, index):
         image_path = self.image_filenames[index]
-        image = self.transform(Image.open(image_path).convert('RGB'))
+        image = self.transform(Image.open(image_path))
         return image
     
     def __len__(self):

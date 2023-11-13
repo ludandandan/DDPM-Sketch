@@ -73,9 +73,9 @@ def train_one_epoch(model, DS, dataloader, optimizer, loss_scaler, loss_fn, epoc
     """
     # use MeanMetric to log loss
     loss_record = MeanMetric()
-    model.train()
+    model.train() # 模型切换到训练模式，启用Dropout，启用Batch Normalization
 
-    with tqdm(total=len(dataloader), dynamic_ncols=True) as tq:
+    with tqdm(total=len(dataloader), dynamic_ncols=True) as tq: #使用进度条
         tq.set_description(f"Train:: Epoch:{epoch}/{total_epochs}")
 
         for X_0_batch in dataloader:
@@ -92,15 +92,15 @@ def train_one_epoch(model, DS, dataloader, optimizer, loss_scaler, loss_fn, epoc
                 loss = loss_fn(Real_noise_batch, Pred_noise)
             
             # optimizer and scaler do the loss bp and update
-            optimizer.zero_grad(set_to_none=True)
-            loss_scaler.scale(loss).backward()
+            optimizer.zero_grad(set_to_none=True) # 清零优化器的梯度
+            loss_scaler.scale(loss).backward() # 将损失值缩放，然后调用backward()进行反向传播计算梯度
 
-            loss_scaler.step(optimizer)
-            loss_scaler.update()
+            loss_scaler.step(optimizer)# 更新模型参数，
+            loss_scaler.update() # 更新梯度缩放器的状态，以便下一次迭代时使用正确的缩放因子
 
             # log the noise predication loss
-            loss_value = loss.detach().item()
-            loss_record.update(loss_value)
+            loss_value = loss.detach().item()#将当前迭代的损失值从计算图中分离，并转换为 Python 标量，以便后续的日志记录或输出
+            loss_record.update(loss_value) # 将loss记录到MeanMetric数据结构中，以便后续分析或可视化
             # tqdm print loss val
             tq.set_postfix_str(s=f"Loss: {loss_value:.4f}")
         
@@ -145,7 +145,7 @@ def reverse_diffusion(model, DS, timesteps=1000, img_shape=(3, 64, 64), num_imag
     x_T = torch.randn((num_images, *img_shape), device=device)  # [num_images, C, H, W]
     x_t = x_T  # the first X_t
 
-    model.eval()
+    model.eval() # 模型切换到评估模式，禁用Dropout，禁用Batch Normalization
 
     if generate_video:  # build the results into frames of a video
         frames_list = []  # all frames

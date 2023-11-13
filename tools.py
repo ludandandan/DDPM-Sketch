@@ -133,7 +133,7 @@ def frames2vid_for_cv2frames(frames_list, save_path):
     video.release()
 
 def get_default_device():
-    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    return torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
 def get_dataset(dataset_name='MNIST'):
     if dataset_name=="SketchDataset":

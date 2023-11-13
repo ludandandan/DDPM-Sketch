@@ -14,13 +14,18 @@ class BaseConfig:
 
     # Current log and checkpoint directory
     # by default start from "version_0", in training, given a value to a new name folder 
-    log_folder = None # in inference: specific a folder name to load, by default will be the latest version
+    log_folder = None #"version_4" # in inference: specific a folder name to load, by default will be the latest version
     checkpoint_name = "ddpm.tar"
 
 @dataclass
 class TrainingConfig:
     TIMESTEPS =1000 # define number of diffusion timesteps
-    IMG_SHAPE = (1, 32, 32) if BaseConfig.DATASET == "MNIST" else (3,32,32)
+    if BaseConfig.DATASET == "MNIST":
+        IMG_SHAPE = (1, 32, 32)
+    elif BaseConfig.DATASET == "SketchDataset":
+        IMG_SHAPE = (1, 128, 128)
+    else:
+        IMG_SHAPE = (3, 32, 32)
     NUM_EPOCHS = 2500
     BATCH_SIZE = 2 #128
     LR = 2e-4
