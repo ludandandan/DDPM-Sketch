@@ -77,8 +77,9 @@ def train_one_epoch(model, DS, dataloader, optimizer, loss_scaler, loss_fn, epoc
 
     with tqdm(total=len(dataloader), dynamic_ncols=True) as tq: #使用进度条
         tq.set_description(f"Train:: Epoch:{epoch}/{total_epochs}")
-
-        for X_0_batch in dataloader:
+        dataloader.sampler.set_epoch(epoch)
+        for X_0_batch,_ in dataloader:
+            X_0_batch = X_0_batch.to(device)
             tq.update(1)
             # Assgin a batch of timesteps to each X0 sample
             batch_timesteps = torch.randint(low=1, high=timesteps, size=(X_0_batch.shape[0],), device=device)
@@ -86,10 +87,10 @@ def train_one_epoch(model, DS, dataloader, optimizer, loss_scaler, loss_fn, epoc
             # Diffuse the batch of X0 to their required step of t 
             X_t_batch, Real_noise_batch = forward_diffusion(DS, X_0_batch, batch_timesteps)
 
-            with amp.autocast():
-                # the model are asked to predict the noise added in diffusing
-                Pred_noise = model(X_t_batch, batch_timesteps)
-                loss = loss_fn(Real_noise_batch, Pred_noise)
+            #with amp.autocast():
+            # the model are asked to predict the noise added in diffusing
+            Pred_noise = model(X_t_batch, batch_timesteps)
+            loss = loss_fn(Real_noise_batch, Pred_noise)
             
             # optimizer and scaler do the loss bp and update
             optimizer.zero_grad(set_to_none=True) # 清零优化器的梯度
@@ -105,10 +106,10 @@ def train_one_epoch(model, DS, dataloader, optimizer, loss_scaler, loss_fn, epoc
             tq.set_postfix_str(s=f"Loss: {loss_value:.4f}")
         
         # MeanMetric calculate loss mean
-        mean_loss = loss_record.compute().item()
+        #mean_loss = loss_record.compute().item() # 为了并行计算牺牲
         # tqdm print mean_loss val
-        tq.set_postfix_str(s=f"Epoch Loss: {mean_loss:.4f}")
-    return mean_loss
+        #tq.set_postfix_str(s=f"Epoch Loss: {mean_loss:.4f}")
+    #return mean_loss
 
 def Denoising_onestep(model, DS:Diffusion_setting, X_t:torch.Tensor, timestep:torch.Tensor, start_at_T=False):
     """
@@ -208,6 +209,7 @@ def train(model, sd, dataloader, optimizer, scaler, loss_fn, img_shape, total_ep
             }
             torch.save(checkpoint_dict, os.path.join(checkpoint_dir, checkpoint_name))
             del checkpoint_dict
+            
 
 
 def inference(model, sd, img_shape, num_images=64, timesteps=1000, nrow=8,

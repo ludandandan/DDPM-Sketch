@@ -15,7 +15,8 @@ class SketchDataset(Dataset):
     def __getitem__(self, index):
         image_path = self.image_filenames[index]
         image = self.transform(Image.open(image_path))
-        return image
+        label = 1.0
+        return image, label
     
     def __len__(self):
         return len(self.image_filenames)

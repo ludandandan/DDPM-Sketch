@@ -12,6 +12,11 @@ import torchvision.datasets as datasets
 from IPython.display import display, HTML
 from data_process.sketch_dataset import SketchDataset
 
+import torch.multiprocessing as mp
+from torch.utils.data.distributed import DistributedSampler
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.distributed import init_process_group, destroy_process_group
+import os
 def setup_log_directory(config, inference=False):
     """
     Log and Model checkpoint directory Setup
@@ -132,9 +137,10 @@ def frames2vid_for_cv2frames(frames_list, save_path):
     # Deallocating memories taken for window creation
     video.release()
 
-def get_default_device():
-    return torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
-
+#def get_default_device():
+    #return torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+def my_transform(t):
+    return (t*2)-1
 def get_dataset(dataset_name='MNIST'):
     if dataset_name=="SketchDataset":
         shape = (256, 256)
@@ -146,7 +152,7 @@ def get_dataset(dataset_name='MNIST'):
             transform.Resize(shape,
                               interpolation=transform.InterpolationMode.BICUBIC,
                               antialias=True),
-            transform.Lambda(lambda t: (t*2)-1) #scale between [-1, 1]
+            transform.Lambda(my_transform) #scale between [-1, 1]
         ]
     )
     if dataset_name.upper() == "MNIST":
@@ -183,9 +189,12 @@ class DeviceDataLoader:
 
 
 
-def get_dataloader(dataset_name='MNIST', batch_size=32, pin_memory=False, shuffle=True, num_workers=0, device='cpu'):
+def get_dataloader(dataset_name='MNIST', batch_size=32, pin_memory=False, shuffle=True, num_workers=0):
     dataset = get_dataset(dataset_name=dataset_name)
-    dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=pin_memory, num_workers=num_workers,
+    if not shuffle:
+        dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=pin_memory, num_workers=num_workers,
+                                shuffle=shuffle,sampler=DistributedSampler(dataset))
+    else:
+        dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=pin_memory, num_workers=num_workers,
                             shuffle=shuffle)
-    device_dataloader = DeviceDataLoader(dataloader, device)
-    return device_dataloader
+    return dataloader
