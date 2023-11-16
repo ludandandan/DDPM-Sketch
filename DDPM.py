@@ -78,7 +78,7 @@ def train_one_epoch(model, DS, dataloader, optimizer, loss_scaler, loss_fn, epoc
     with tqdm(total=len(dataloader), dynamic_ncols=True) as tq: #使用进度条
         tq.set_description(f"Train:: Epoch:{epoch}/{total_epochs}")
 
-        for X_0_batch in dataloader:
+        for X_0_batch,_ in dataloader:
             tq.update(1)
             # Assgin a batch of timesteps to each X0 sample
             batch_timesteps = torch.randint(low=1, high=timesteps, size=(X_0_batch.shape[0],), device=device)

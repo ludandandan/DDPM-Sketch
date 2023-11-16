@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 @dataclass
 class BaseConfig:
     DEVICE = get_default_device()
-    DATASET = "SketchDataset" # "MNIST", "Cifar-10","Cifar-100", "Flowers"
+    DATASET = "SketchDataset" # "MNIST", "Cifar-10","Cifar-100", "Flowers","SketchDataset"
 
     # Path to log inference images and save checkpoints
     root = "./logs_Checkpoints"
